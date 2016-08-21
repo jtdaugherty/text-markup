@@ -37,14 +37,14 @@ fromMarkup (Markup txt tree) =
         (_, chunks) = foldl nextChunk initialState descs
     in chunks
 
-markRegion :: (Show a) => Int -> Int -> a -> Markup a -> Markup a
+markRegion :: (Eq a) => Int -> Int -> a -> Markup a -> Markup a
 markRegion start len val (Markup txt t0) = Markup txt t1
     where
         t1 = treeMarkRegion start len val t0
 
 -- Need recursive algorithm to rebuild tree with nodes split up as
 -- necessary
-treeMarkRegion :: (Show a) => Int -> Int -> a -> SequenceTree a -> SequenceTree a
+treeMarkRegion :: (Eq a) => Int -> Int -> a -> SequenceTree a -> SequenceTree a
 treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
     if not (startInLeaf || endInLeaf) then leaf
     else if length validLeaves == 1
@@ -70,6 +70,7 @@ treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
                     ]
         validLeaves = filter isValidLeaf newLeaves
         isValidLeaf (Leaf _ l _) = l > 0
+        isValidLeaf _ = error "BUG: isValidLeaf got a Node!"
 
 treeMarkRegion start len newVal node@(Node lStart lLen cs) =
     let end = start + len
@@ -79,8 +80,39 @@ treeMarkRegion start len newVal node@(Node lStart lLen cs) =
     -- If the start or end is somewhere in this node, we need to process
     -- the children
     in if startInNode || endInNode
-       then Node lStart lLen $ treeMarkRegion start len newVal <$> cs
+       then let newChildren = treeMarkRegion start len newVal <$> cs
+            in case mergeNodes newChildren of
+                Left c -> c
+                Right cs -> Node lStart lLen cs
        else node
+
+mergeNodes :: (Eq a) => [SequenceTree a] -> Either (SequenceTree a) [SequenceTree a]
+mergeNodes [] = Right []
+mergeNodes [l] = Left l
+mergeNodes (a:b:rest) =
+    case mergeNodePair a b of
+        Just m -> mergeNodes $ m:rest
+        Nothing -> case mergeNodes $ b:rest of
+            Left l -> Right [a, l]
+            Right ls -> Right $ a:ls
+
+mergeNodePair :: (Eq a) => SequenceTree a -> SequenceTree a -> Maybe (SequenceTree a)
+mergeNodePair (Leaf aStart aLen aVal) (Leaf bStart bLen bVal)
+    | aVal == bVal && bStart == aStart + aLen = Just $ Leaf aStart (aLen + bLen) aVal
+    | otherwise = Nothing
+mergeNodePair leaf@(Leaf aStart aLen aVal) (Node bStart bLen (b:bs)) = do
+    merged <- mergeNodePair leaf b
+    -- XXX this doesn't try to keep merging 'merged' with 'bs'
+    return $ Node aStart (aStart + aLen + bLen) $ merged:bs
+mergeNodePair (Node aStart aLen as)    leaf@(Leaf bStart bLen bVal) | length as > 0 = do
+    merged <- mergeNodePair (last as) leaf
+    -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
+    return $ Node aStart (aStart + aLen + bLen) $ (init as) <> [merged]
+mergeNodePair (Node aStart aLen as)   (Node bStart bLen bs) | length as > 0 && length bs > 0 = do
+    merged <- mergeNodePair (last as) (head bs)
+    -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
+    return $ Node aStart (aStart + aLen + bLen) $ init as <> [merged] <> tail bs
+mergeNodePair _ _ = Nothing
 
 leaves :: SequenceTree a -> [(Int, Int, a)]
 leaves (Leaf st len a) = [(st, len, a)]
