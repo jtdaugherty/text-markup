@@ -1,0 +1,30 @@
+name:                text-markup
+version:             0.1
+synopsis:            Generalized text scanning and markup
+license:             BSD3
+license-file:        LICENSE
+author:              Jonathan Daugherty
+maintainer:          cygnus@foobox.com
+copyright:           (c) 2016 Jonathan Daugherty
+category:            Text
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     
+    Data.Text.Markup
+
+  hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  build-depends:       base >=4.8 && <4.9,
+                       containers,
+                       text
+
+executable markup-test
+  hs-source-dirs:      programs
+  main-is:             MarkupTest.hs
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+  build-depends:       base >=4.8 && <4.9,
+                       text-markup

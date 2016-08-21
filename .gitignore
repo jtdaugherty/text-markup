@@ -1,0 +1,6 @@
+.cabal-sandbox/
+.text-markup.cabal.swp
+cabal.sandbox.config
+dist/
+programs/.MarkupTest.hs.swp
+src/Data/Text/.Markup.hs.swp
