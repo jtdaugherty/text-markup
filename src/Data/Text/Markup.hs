@@ -82,8 +82,8 @@ treeMarkRegion start len newVal node@(Node lStart lLen cs) =
     in if startInNode || endInNode
        then let newChildren = treeMarkRegion start len newVal <$> cs
             in case mergeNodes newChildren of
-                Left c -> c
-                Right cs -> Node lStart lLen cs
+                Left single -> single
+                Right many -> Node lStart lLen many
        else node
 
 mergeNodes :: (Eq a) => [SequenceTree a] -> Either (SequenceTree a) [SequenceTree a]
@@ -100,15 +100,15 @@ mergeNodePair :: (Eq a) => SequenceTree a -> SequenceTree a -> Maybe (SequenceTr
 mergeNodePair (Leaf aStart aLen aVal) (Leaf bStart bLen bVal)
     | aVal == bVal && bStart == aStart + aLen = Just $ Leaf aStart (aLen + bLen) aVal
     | otherwise = Nothing
-mergeNodePair leaf@(Leaf aStart aLen aVal) (Node bStart bLen (b:bs)) = do
+mergeNodePair leaf@(Leaf aStart aLen _) (Node _ bLen (b:bs)) = do
     merged <- mergeNodePair leaf b
     -- XXX this doesn't try to keep merging 'merged' with 'bs'
     return $ Node aStart (aStart + aLen + bLen) $ merged:bs
-mergeNodePair (Node aStart aLen as)    leaf@(Leaf bStart bLen bVal) | length as > 0 = do
+mergeNodePair (Node aStart aLen as)    leaf@(Leaf _ bLen _) | length as > 0 = do
     merged <- mergeNodePair (last as) leaf
     -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
     return $ Node aStart (aStart + aLen + bLen) $ (init as) <> [merged]
-mergeNodePair (Node aStart aLen as)   (Node bStart bLen bs) | length as > 0 && length bs > 0 = do
+mergeNodePair (Node aStart aLen as)   (Node _ bLen bs) | length as > 0 && length bs > 0 = do
     merged <- mergeNodePair (last as) (head bs)
     -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
     return $ Node aStart (aStart + aLen + bLen) $ init as <> [merged] <> tail bs
