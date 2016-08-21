@@ -33,9 +33,8 @@ fromMarkup (Markup txt tree) =
         initialState :: (T.Text, [(T.Text, a)])
         initialState = (txt, [])
         nextChunk desc (remainingText, prevChunks) =
-            let remainingText' = T.drop (seqLength desc) remainingText
+            let (thisText, remainingText') = T.splitAt (seqLength desc) remainingText
                 thisChunk = (thisText, thisValue)
-                thisText = T.take (seqLength desc) remainingText
                 thisValue = seqData desc
             in (remainingText', prevChunks <> [thisChunk])
         (_, chunks) = foldr nextChunk initialState descs
