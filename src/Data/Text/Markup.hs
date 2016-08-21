@@ -98,19 +98,21 @@ mergeNodes (a:b:rest) =
 
 mergeNodePair :: (Eq a) => SequenceTree a -> SequenceTree a -> Maybe (SequenceTree a)
 mergeNodePair (Leaf aStart aLen aVal) (Leaf bStart bLen bVal)
-    | aVal == bVal && bStart == aStart + aLen = Just $ Leaf aStart (aLen + bLen) aVal
-    | otherwise = Nothing
+  | aVal == bVal && bStart == aStart + aLen = Just $ Leaf aStart (aLen + bLen) aVal
+  | otherwise = Nothing
 mergeNodePair leaf@(Leaf aStart aLen _) (Node _ bLen (b:bs)) = do
     merged <- mergeNodePair leaf b
     case mergeNodes $ merged:bs of
         Left single -> return single
         Right many -> return $ Node aStart (aStart + aLen + bLen) many
-mergeNodePair (Node aStart aLen as)    leaf@(Leaf _ bLen _) | length as > 0 = do
+mergeNodePair (Node aStart aLen as) leaf@(Leaf _ bLen _)
+  | length as > 0 = do
     merged <- mergeNodePair (last as) leaf
     case mergeNodes $ (init as)<>[merged] of
         Left single -> return single
         Right many -> return $ Node aStart (aStart + aLen + bLen) many
-mergeNodePair (Node aStart aLen as)   (Node _ bLen bs) | length as > 0 && length bs > 0 = do
+mergeNodePair (Node aStart aLen as) (Node _ bLen bs)
+  | length as > 0 && length bs > 0 = do
     merged <- mergeNodePair (last as) (head bs)
     case mergeNodes $ init as <> [merged] <> tail bs of
         Left single -> return single
