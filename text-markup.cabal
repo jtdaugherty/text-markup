@@ -18,7 +18,6 @@ library
   default-language:    Haskell2010
   ghc-options:         -Wall
   build-depends:       base >=4.8 && <4.9,
-                       containers,
                        text
 
 executable markup-test
@@ -27,4 +26,5 @@ executable markup-test
   default-language:    Haskell2010
   ghc-options:         -Wall
   build-depends:       base >=4.8 && <4.9,
-                       text-markup
+                       text-markup,
+                       text
