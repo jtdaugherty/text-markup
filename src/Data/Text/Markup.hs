@@ -102,16 +102,19 @@ mergeNodePair (Leaf aStart aLen aVal) (Leaf bStart bLen bVal)
     | otherwise = Nothing
 mergeNodePair leaf@(Leaf aStart aLen _) (Node _ bLen (b:bs)) = do
     merged <- mergeNodePair leaf b
-    -- XXX this doesn't try to keep merging 'merged' with 'bs'
-    return $ Node aStart (aStart + aLen + bLen) $ merged:bs
+    case mergeNodes $ merged:bs of
+        Left single -> return single
+        Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair (Node aStart aLen as)    leaf@(Leaf _ bLen _) | length as > 0 = do
     merged <- mergeNodePair (last as) leaf
-    -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
-    return $ Node aStart (aStart + aLen + bLen) $ (init as) <> [merged]
+    case mergeNodes $ (init as)<>[merged] of
+        Left single -> return single
+        Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair (Node aStart aLen as)   (Node _ bLen bs) | length as > 0 && length bs > 0 = do
     merged <- mergeNodePair (last as) (head bs)
-    -- XXX this doesn't try to keep merging 'merged' with the init of 'as'
-    return $ Node aStart (aStart + aLen + bLen) $ init as <> [merged] <> tail bs
+    case mergeNodes $ init as <> [merged] <> tail bs of
+        Left single -> return single
+        Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair _ _ = Nothing
 
 leaves :: SequenceTree a -> [(Int, Int, a)]
