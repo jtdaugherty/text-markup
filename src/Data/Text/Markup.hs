@@ -47,7 +47,7 @@ markRegion start len val (Markup txt t0) = Markup txt t1
 -- necessary
 treeMarkRegion :: (Eq a) => Int -> Int -> a -> SequenceTree a -> SequenceTree a
 treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
-    if not (startInLeaf || endInLeaf) then leaf
+    if newLen == 0 || not (startInLeaf || endInLeaf) then leaf
     else if length validLeaves == 1
          then S.index validLeaves 0
          else if S.length validLeaves > 1
