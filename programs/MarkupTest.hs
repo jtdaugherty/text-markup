@@ -10,7 +10,7 @@ import Text.Regex.Base.RegexLike (makeRegex, matchAll)
 import Text.Regex.TDFA.String
 
 emailPattern :: Regex
-emailPattern = makeRegex ("[[:alnum:]\\+]+@([[:alnum:]]+\\.)+([[:alnum:]]+)":: String)
+emailPattern = makeRegex ("[[:alnum:]\\+]+@([[:alnum:]]+\\.)+([[:alnum:]]+)"::String)
 
 ipv4Pattern :: Regex
 ipv4Pattern = makeRegex ("([[:digit:]]+\\.+){3}([[:digit:]]+)"::String)
