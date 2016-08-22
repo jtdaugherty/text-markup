@@ -1,3 +1,4 @@
+.*.swp
 .cabal-sandbox/
 .text-markup.cabal.swp
 cabal.sandbox.config
