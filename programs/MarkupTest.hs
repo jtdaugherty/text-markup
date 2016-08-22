@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Monoid ((<>))
 import qualified Data.Text as T
 import Data.Text.Markup
 import qualified Data.Array as A
@@ -11,9 +12,12 @@ import Text.Regex.TDFA.String
 emailPattern :: Regex
 emailPattern = makeRegex ("[[:alnum:]\\+]+@([[:alnum:]]+\\.)+([[:alnum:]]+)":: String)
 
-findEmailAddresses :: T.Text -> [(Int, Int)]
-findEmailAddresses t =
-    concat $ A.elems <$> matchAll emailPattern (T.unpack t)
+ipv4Pattern :: Regex
+ipv4Pattern = makeRegex ("([[:digit:]]+\\.+){3}([[:digit:]]+)"::String)
+
+findRegex :: T.Text -> Regex -> [(Int, Int)]
+findRegex t r =
+    concat $ A.elems <$> matchAll r (T.unpack t)
 
 main :: IO ()
 main = do
@@ -43,8 +47,13 @@ main = do
     print $ fromMarkup m7
     print $ fromMarkup m8
 
-    let matches = findEmailAddresses s
-        s = "an email address looks like email@domain.com or foo+bar@domain.net."
-    print matches
-    let markup = foldr (\(pos,len) m -> markRegion pos len "email" m) (toMarkup s "noise") matches
-    print $ fromMarkup markup
+    let emailMatches = findRegex s emailPattern
+        ipv4Matches = findRegex s ipv4Pattern
+        s = "Email addresses look like email@domain.com or foo+bar@domain.net; " <>
+            "IPv4 addresses look like 192.168.1.1."
+        applyMatches matches tag markup =
+            foldr (\(pos,len) m -> markRegion pos len tag m) markup matches
+
+    print $ fromMarkup $ applyMatches emailMatches (Just "email") $
+                         applyMatches ipv4Matches (Just "ipv4") $
+                         toMarkup s Nothing
