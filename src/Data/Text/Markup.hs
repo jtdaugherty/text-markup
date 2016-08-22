@@ -52,7 +52,7 @@ treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
          then S.index validLeaves 0
          else if S.length validLeaves > 1
               then Node lStart lLen validLeaves
-              else error "Ended up with zero valid leaves!"
+              else leaf
     where
         end = newStart + newLen
         lEnd = lStart + lLen
