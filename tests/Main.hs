@@ -17,8 +17,8 @@ propertyTests = T.testGroup "Markup"
 
     , testProperty "text preservation" $ property $ do
         txt <- arbitrary
-        start <- arbitrary -- `suchThat` (>= 0)
-        len <- arbitrary -- `suchThat` (<= Text.length txt)
+        start <- arbitrary
+        len <- arbitrary
         return $ counterexample (show (txt, start, len)) $
             let m1 = markRegion start len 2 m0
                 m0 = toMarkup txt 1
