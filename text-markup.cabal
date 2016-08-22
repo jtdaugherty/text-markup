@@ -40,4 +40,6 @@ test-suite test-markup-tests
                        text-markup,
                        QuickCheck,
                        tasty,
-                       tasty-quickcheck
+                       tasty-quickcheck,
+                       text,
+                       quickcheck-text
