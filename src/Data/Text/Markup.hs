@@ -13,13 +13,13 @@ import qualified Data.Text as T
 data SequenceTree a =
     Node Int Int (S.Seq (SequenceTree a))
     | Leaf Int Int a
-    deriving (Show)
+    deriving (Show, Eq)
 
 data Markup a =
     Markup { sourceText :: T.Text
            , markupMapping :: SequenceTree a
            }
-           deriving (Show)
+           deriving (Show, Eq)
 
 toMarkup :: T.Text -> a -> Markup a
 toMarkup t a = Markup t (Leaf 0 (T.length t) a)
