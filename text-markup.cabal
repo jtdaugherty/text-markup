@@ -28,7 +28,10 @@ executable markup-test
   ghc-options:         -Wall
   build-depends:       base >=4.8 && <4.9,
                        text-markup,
-                       text
+                       text,
+                       regex-base,
+                       regex-tdfa,
+                       array
 
 test-suite test-markup-tests
   default-language:    Haskell2010

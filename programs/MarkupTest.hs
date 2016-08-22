@@ -3,6 +3,17 @@ module Main where
 
 import qualified Data.Text as T
 import Data.Text.Markup
+import qualified Data.Array as A
+
+import Text.Regex.Base.RegexLike (makeRegex, matchAll)
+import Text.Regex.TDFA.String
+
+emailPattern :: Regex
+emailPattern = makeRegex ("[[:alnum:]\\+]+@([[:alnum:]]+\\.)+([[:alnum:]]+)":: String)
+
+findEmailAddresses :: T.Text -> [(Int, Int)]
+findEmailAddresses t =
+    concat $ A.elems <$> matchAll emailPattern (T.unpack t)
 
 main :: IO ()
 main = do
@@ -31,3 +42,9 @@ main = do
     print $ fromMarkup m6
     print $ fromMarkup m7
     print $ fromMarkup m8
+
+    let matches = findEmailAddresses s
+        s = "an email address looks like email@domain.com or foo+bar@domain.net."
+    print matches
+    let markup = foldr (\(pos,len) m -> markRegion pos len "email" m) (toMarkup s "noise") matches
+    print $ fromMarkup markup
