@@ -6,11 +6,12 @@ module Data.Text.Markup
   )
 where
 
+import qualified Data.Sequence as S
 import Data.Monoid ((<>))
 import qualified Data.Text as T
 
 data SequenceTree a =
-    Node Int Int [SequenceTree a]
+    Node Int Int (S.Seq (SequenceTree a))
     | Leaf Int Int a
     deriving (Show)
 
@@ -48,8 +49,8 @@ treeMarkRegion :: (Eq a) => Int -> Int -> a -> SequenceTree a -> SequenceTree a
 treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
     if not (startInLeaf || endInLeaf) then leaf
     else if length validLeaves == 1
-         then validLeaves !! 0
-         else if length validLeaves > 1
+         then S.index validLeaves 0
+         else if S.length validLeaves > 1
               then Node lStart lLen validLeaves
               else error "Ended up with zero valid leaves!"
     where
@@ -64,11 +65,11 @@ treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
         newEnd = min lEnd (newStart + newLen)
         newLen' = newEnd - newStart'
 
-        newLeaves = [ Leaf lStart (newStart - lStart) oldVal
-                    , Leaf newStart' newLen' newVal
-                    , Leaf newEnd (lEnd - newEnd) oldVal
-                    ]
-        validLeaves = filter isValidLeaf newLeaves
+        newLeaves = S.fromList [ Leaf lStart (newStart - lStart) oldVal
+                               , Leaf newStart' newLen' newVal
+                               , Leaf newEnd (lEnd - newEnd) oldVal
+                               ]
+        validLeaves = S.filter isValidLeaf newLeaves
         isValidLeaf (Leaf _ l _) = l > 0
         isValidLeaf _ = error "BUG: isValidLeaf got a Node!"
 
@@ -86,35 +87,51 @@ treeMarkRegion start len newVal node@(Node lStart lLen cs) =
                 Right many -> Node lStart lLen many
        else node
 
-mergeNodes :: (Eq a) => [SequenceTree a] -> Either (SequenceTree a) [SequenceTree a]
-mergeNodes [] = Right []
-mergeNodes [l] = Left l
-mergeNodes (a:b:rest) =
-    case mergeNodePair a b of
-        Just m -> mergeNodes $ m:rest
-        Nothing -> case mergeNodes $ b:rest of
-            Left l -> Right [a, l]
-            Right ls -> Right $ a:ls
+mergeNodes :: (Eq a) => S.Seq (SequenceTree a) -> Either (SequenceTree a) (S.Seq (SequenceTree a))
+mergeNodes s
+  | S.null s = Right S.empty
+  | S.length s == 1 = Left $ S.index s 0
+  | otherwise =
+      let a = S.index s 0
+          b = S.index s 1
+          rest = S.drop 2 s
+      in case mergeNodePair a b of
+        Just m -> mergeNodes $ m S.<| rest
+        Nothing -> case mergeNodes $ b S.<| rest of
+            Left l -> Right $ S.fromList [a, l]
+            Right ls -> Right $ a S.<| ls
+
+sInit :: S.Seq a -> S.Seq a
+sInit s = S.take ((S.length s) - 1) s
+
+sHead :: S.Seq a -> a
+sHead s = S.index s 0
+
+sTail :: S.Seq a -> S.Seq a
+sTail = S.drop 1
+
+sLast :: S.Seq a -> a
+sLast s = S.index s ((S.length s) - 1)
 
 mergeNodePair :: (Eq a) => SequenceTree a -> SequenceTree a -> Maybe (SequenceTree a)
 mergeNodePair (Leaf aStart aLen aVal) (Leaf bStart bLen bVal)
   | aVal == bVal && bStart == aStart + aLen = Just $ Leaf aStart (aLen + bLen) aVal
   | otherwise = Nothing
-mergeNodePair leaf@(Leaf aStart aLen _) (Node _ bLen (b:bs)) = do
-    merged <- mergeNodePair leaf b
-    case mergeNodes $ merged:bs of
+mergeNodePair leaf@(Leaf aStart aLen _) (Node _ bLen bs) = do
+    merged <- mergeNodePair leaf $ sHead bs
+    case mergeNodes $ merged S.<| (sTail bs) of
         Left single -> return single
         Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair (Node aStart aLen as) leaf@(Leaf _ bLen _)
   | length as > 0 = do
-    merged <- mergeNodePair (last as) leaf
-    case mergeNodes $ (init as)<>[merged] of
+    merged <- mergeNodePair (sLast as) leaf
+    case mergeNodes $ sInit as <> S.singleton merged of
         Left single -> return single
         Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair (Node aStart aLen as) (Node _ bLen bs)
   | length as > 0 && length bs > 0 = do
-    merged <- mergeNodePair (last as) (head bs)
-    case mergeNodes $ init as <> [merged] <> tail bs of
+    merged <- mergeNodePair (sLast as) (sHead bs)
+    case mergeNodes $ sInit as <> S.singleton merged <> sTail bs of
         Left single -> return single
         Right many -> return $ Node aStart (aStart + aLen + bLen) many
 mergeNodePair _ _ = Nothing
