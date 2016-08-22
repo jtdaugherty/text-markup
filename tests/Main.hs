@@ -3,7 +3,6 @@ module Main where
 
 import Test.Tasty as T
 import Test.Tasty.QuickCheck as T
-import Test.QuickCheck.Property
 -- For Arbitrary instance for Text
 import Data.Text.Arbitrary ()
 import qualified Data.Text as Text
