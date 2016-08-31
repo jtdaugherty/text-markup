@@ -17,7 +17,7 @@ library
   hs-source-dirs:      src
   default-language:    Haskell2010
   ghc-options:         -Wall
-  build-depends:       base >=4.8 && <4.9,
+  build-depends:       base >=4.8 && <5.0,
                        containers,
                        text
 
@@ -26,7 +26,7 @@ executable markup-test
   main-is:             MarkupTest.hs
   default-language:    Haskell2010
   ghc-options:         -Wall
-  build-depends:       base >=4.8 && <4.9,
+  build-depends:       base >=4.8 && <5.0,
                        text-markup,
                        text,
                        regex-base,
@@ -39,7 +39,7 @@ test-suite test-markup-tests
   main-is:             Main.hs
   type:                exitcode-stdio-1.0
   ghc-options:         -Wall
-  Build-Depends:       base >= 4.8 && < 4.9,
+  Build-Depends:       base >= 4.8 && < 5.0,
                        text-markup,
                        QuickCheck,
                        tasty,
