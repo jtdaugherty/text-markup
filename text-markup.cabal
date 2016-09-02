@@ -41,7 +41,7 @@ test-suite test-markup-tests
   ghc-options:         -Wall
   Build-Depends:       base >= 4.8 && < 5.0,
                        text-markup,
-                       QuickCheck,
+                       QuickCheck <= 2.8.2,
                        tasty,
                        tasty-quickcheck,
                        text,
