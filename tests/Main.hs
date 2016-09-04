@@ -26,8 +26,22 @@ propertyTests = T.testGroup "Markup"
         return $ counterexample (show (txt, start, len, m1)) $
             (Text.concat $ fst <$> fromMarkup m1) == txt
 
+    -- A no-op marking on a valid range is ignored.
+    , testProperty "no-op marking 1" $ property $ do
+        txt <- arbitrary
+        -- Generate a no-op edit: it starts and ends outside the text
+        -- range.
+        start <- arbitrary `suchThat` (\s -> (s < 0) ||
+                                             (s >= Text.length txt))
+        len <- arbitrary `suchThat` (\l -> (l >= 0))
+        return $ counterexample (show (txt, start, len)) $
+            let m1 = markRegion start len 1 m0
+                m0 :: Markup Int
+                m0 = toMarkup txt 1
+            in m0 == m1
+
     -- A marking that is outside the text range shall have no effect.
-    , testProperty "no-op marking" $ property $ do
+    , testProperty "no-op marking 2" $ property $ do
         txt <- arbitrary
         -- Generate a no-op edit: it starts and ends outside the text
         -- range.
