@@ -9,8 +9,14 @@ copyright:           (c) 2016 Jonathan Daugherty
 category:            Text
 build-type:          Simple
 cabal-version:       >=1.10
+Homepage:            https://github.com/jtdaugherty/text-markup/
+Bug-reports:         https://github.com/jtdaugherty/text-markup/issues
 data-files:          README.md,
                      CHANGELOG.md
+
+Source-Repository head
+  type:     git
+  location: git://github.com/jtdaugherty/text-markup.git
 
 library
   exposed-modules:     
