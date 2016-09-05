@@ -51,7 +51,9 @@ treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
     else if length validLeaves == 1
          then S.index validLeaves 0
          else if S.length validLeaves > 1
-              then Node lStart lLen validLeaves
+              then case mergeNodes validLeaves of
+                  Left l -> l
+                  Right ls -> Node lStart lLen ls
               else leaf
     where
         end = newStart + newLen
