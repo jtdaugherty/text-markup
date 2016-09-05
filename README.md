@@ -14,19 +14,25 @@ library is through three functions:
 For example,
 
 ```
-let m = toMarkup (T.pack "some@email.com 192.168.1.1 http://google.com/") Nothing
-fromMarkup $ markRegion 27 18 (Just "url")
-           $ markRegion 15 11 (Just "ipv4")
-           $ markRegion 0 14 (Just "e-mail") m
-```
-
-yields
-
-```
+> let m = toMarkup (T.pack "some@email.com 192.168.1.1 http://google.com/") Nothing
+> fromMarkup $ markRegion 27 18 (Just "url")
+             $ markRegion 15 11 (Just "ipv4")
+             $ markRegion 0 14 (Just "e-mail") m
 [ ("some@email.com"    , Just "e-mail")
 , (" "                 , Nothing)
 , ("192.168.1.1"       , Just "ipv4")
 , (" "                 , Nothing)
 , ("http://google.com/", Just "url")
 ]
+```
+
+Applying the same markup to adjacent regions results in a merge:
+
+```
+> let m = toMarkup (T.pack "foobar") Nothing
+> fromMarkup $ markRegion 0 3 (Just "token") m
+[("foo",Just "token"),("bar",Nothing)]
+> fromMarkup $ markRegion 3 3 (Just "token")
+             $ markRegion 0 3 (Just "token") m
+[("foobar",Just "token")]
 ```
