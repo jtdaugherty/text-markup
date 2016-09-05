@@ -16,8 +16,8 @@ data SequenceTree a =
     deriving (Show, Eq)
 
 data Markup a =
-    Markup { sourceText :: T.Text
-           , markupMapping :: SequenceTree a
+    Markup { _sourceText :: T.Text
+           , _markupMapping :: SequenceTree a
            }
            deriving (Show, Eq)
 
