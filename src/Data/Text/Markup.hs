@@ -1,3 +1,4 @@
+-- | Annotate subsequences of a 'Text' string with arbitrary metadata.
 module Data.Text.Markup
   ( Markup
   , toMarkup
@@ -15,15 +16,20 @@ data SequenceTree a =
     | Leaf Int Int a
     deriving (Show, Eq)
 
+-- | Markup.  This contains text along with markup.
 data Markup a =
     Markup { _sourceText :: T.Text
            , _markupMapping :: SequenceTree a
            }
            deriving (Show, Eq)
 
+-- | Convert a 'Text' value into 'Markup' with the accompanying metadata
+-- value assigned to the entire 'Text' sequence.
 toMarkup :: T.Text -> a -> Markup a
 toMarkup t a = Markup t (Leaf 0 (T.length t) a)
 
+-- | Recover the original text along with metadata assigned with
+-- 'markRegion'.
 fromMarkup :: Markup a -> [(T.Text, a)]
 fromMarkup (Markup txt tree) =
     -- Get all leave nodes from the tree in order, then use their
@@ -38,7 +44,17 @@ fromMarkup (Markup txt tree) =
         (_, chunks) = foldl nextChunk initialState descs
     in chunks
 
-markRegion :: (Eq a) => Int -> Int -> a -> Markup a -> Markup a
+-- | Mark a region of text with the specified metadata.
+markRegion :: (Eq a)
+           => Int
+           -- ^ The starting index to mark.
+           -> Int
+           -- ^ The size of the region to mark.
+           -> a
+           -- ^ The metadata to store for this region.
+           -> Markup a
+           -- ^ The markup to modify.
+           -> Markup a
 markRegion start len val m@(Markup txt t0) =
     if start < 0 || len < 0 then m else Markup txt t1
     where
