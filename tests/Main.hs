@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Monoid ((<>))
+import qualified Data.Text as T
 import Test.Tasty as T
 import Test.Tasty.QuickCheck as T
 -- For Arbitrary instance for Text
@@ -8,6 +10,9 @@ import Data.Text.Arbitrary ()
 import qualified Data.Text as Text
 
 import Data.Text.Markup
+
+arbitraryText :: Gen T.Text
+arbitraryText = T.pack <$> listOf (elements $ ' ':['a'..'z']<>['0'..'9'])
 
 propertyTests :: T.TestTree
 propertyTests = T.testGroup "Markup"
@@ -74,23 +79,22 @@ propertyTests = T.testGroup "Markup"
         return $ counterexample (show (txt, r1Start, r1Len, r2Len, fromMarkup m2, fromMarkup m3)) $
             fromMarkup m2 == fromMarkup m3
 
-    -- Applying a small marking A followed by a containing marking B is
+    -- Applying a small marking A followed by an enclosing marking B is
     -- equivalent to just applying B.
     , testProperty "containing marking" $ property $ do
-        txt <- arbitrary
+        txt <- arbitraryText
         -- Generate the containing range...
         r1Start <- arbitrary `suchThat` (\s -> (s >= 0))
         r1Len <- arbitrary `suchThat` (\l -> (l >= 3))
-        -- then a contained one.
+        -- Then a contained one.
         let r2Start = r1Start + 1
             r2Len = r1Len - 1
-
-        let m1 = markRegion r2Start r2Len 2 m0
-            m2 = markRegion r1Start r1Len 3 m1
             m0 :: Markup Int
             m0 = toMarkup txt 1
+            m1 = markRegion r2Start r2Len 2 m0
+            m2 = markRegion r1Start r1Len 3 m1
             m3 = markRegion r1Start r1Len 3 m0
-        return $ counterexample (show (txt, r1Start, r1Len, r2Len, fromMarkup m2, fromMarkup m3)) $
+        return $ counterexample (show (txt, (r1Start, r1Len), (r2Start, r2Len), fromMarkup m1, fromMarkup m2, fromMarkup m3)) $
             fromMarkup m2 == fromMarkup m3
     ]
 

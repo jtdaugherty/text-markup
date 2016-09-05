@@ -38,8 +38,9 @@ fromMarkup (Markup txt tree) =
         (_, chunks) = foldl nextChunk initialState descs
     in chunks
 
-markRegion :: (Eq a) => Int -> Int -> a -> Markup a -> Markup a
-markRegion start len val (Markup txt t0) = Markup txt t1
+markRegion :: (Show a, Eq a) => Int -> Int -> a -> Markup a -> Markup a
+markRegion start len val m@(Markup txt t0) =
+    if start < 0 || len < 0 then m else Markup txt t1
     where
         t1 = treeMarkRegion start len val t0
 
@@ -47,7 +48,7 @@ markRegion start len val (Markup txt t0) = Markup txt t1
 -- necessary
 treeMarkRegion :: (Eq a) => Int -> Int -> a -> SequenceTree a -> SequenceTree a
 treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
-    if newLen == 0 || not (startInLeaf || endInLeaf) then leaf
+    if newLen == 0 || not (startInLeaf || endInLeaf || containsLeaf) then leaf
     else if length validLeaves == 1
          then S.index validLeaves 0
          else if S.length validLeaves > 1
@@ -60,6 +61,7 @@ treeMarkRegion newStart newLen newVal leaf@(Leaf lStart lLen oldVal) =
         lEnd = lStart + lLen
         startInLeaf = newStart >= lStart && newStart <= lEnd
         endInLeaf = end >= lStart && end <= lEnd
+        containsLeaf = newStart < lStart && newLen > lLen
 
         -- Clamp the new node leaf to the size of the current leaf since
         -- the request could be larger than this leaf
@@ -80,9 +82,10 @@ treeMarkRegion start len newVal node@(Node lStart lLen cs) =
         lEnd = lStart + lLen
         startInNode = start >= lStart && start <= lEnd
         endInNode   = end   >= lStart && end   <= lEnd
+        containsNode = start < lStart && len > lLen
     -- If the start or end is somewhere in this node, we need to process
     -- the children
-    in if startInNode || endInNode
+    in if startInNode || endInNode || containsNode
        then let newChildren = treeMarkRegion start len newVal <$> cs
             in case mergeNodes newChildren of
                 Left single -> single
