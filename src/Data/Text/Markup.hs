@@ -38,7 +38,7 @@ fromMarkup (Markup txt tree) =
         (_, chunks) = foldl nextChunk initialState descs
     in chunks
 
-markRegion :: (Show a, Eq a) => Int -> Int -> a -> Markup a -> Markup a
+markRegion :: (Eq a) => Int -> Int -> a -> Markup a -> Markup a
 markRegion start len val m@(Markup txt t0) =
     if start < 0 || len < 0 then m else Markup txt t1
     where
