@@ -1,6 +1,6 @@
 name:                text-markup
 version:             0.1
-synopsis:            A data structure for assigning metadata to text subsequences
+synopsis:            A data structure for mapping metadata to text subsequences
 license:             BSD3
 license-file:        LICENSE
 author:              Jonathan Daugherty

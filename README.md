@@ -3,10 +3,10 @@ text-markup
 
 This library provides a data structure for associating arbitrary
 metadata ("markup") with subsequences of text. The motivation for
-this library is to provide a tool for tracking the assignment of text
-attributes to text sequences in terminal applications where we may
-want to perform many such assignments by searching text with regular
-expressions or using parsers to do syntax highlighting.
+this library is to provide a tool for mapping text attributes to text
+sequences in terminal applications where we may want to perform many
+such mappings by searching text with regular expressions or using
+parsers to do syntax highlighting.
 
 The main interface to the library is through three functions:
 
